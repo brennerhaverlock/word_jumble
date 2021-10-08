@@ -120,14 +120,16 @@ def solve_final_jumble(letters, final_circles):
 
     d = enchant("en_US")
 
-
+    
     # All ideal words for each set will go here
     word_one_res = []
     word_two_res = []
 
 
-
     word_one = [''.join(p) for p in permutations(letters, group_sizes[0] )]
+
+
+
     word_two = [''.join(p) for p in permutations(letters, group_sizes[1] )]
 
     for word in word_one:
