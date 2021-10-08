@@ -30,7 +30,11 @@
 
 # import random
 import enchant 
+import copy
 from itertools import permutations
+
+
+
 
 def get_file_lines(filename='/usr/share/dict/words'):
     """Return a list of strings on separate lines in the given text file with
@@ -63,21 +67,15 @@ def solve_one_jumble(letters):
     valid_words = []
     
     d = enchant.Dict("en_US")
-    suggestions = d.suggest(letters)
+    permutation_list = [''.join(p) for p in permutations(letters)]
 
-
-    for word in suggestions:
+    for word in permutation_list:
         if len(word) == len(letters):
-            valid_words.append(word)
+            if d.check(word):
+                valid_words.append(word)
 
     return valid_words
 
-
-def permutations(text):
-    """Returns list of lists of all permutations of text"""
-    perms = [''.join(p) for p in itertools.permutations(text)]
-
-    return perms
 
 def solve_final_jumble(letters, final_circles):
     """Solve the final jumbled phrase by unscrambling the given letters.
@@ -103,8 +101,6 @@ def solve_final_jumble(letters, final_circles):
         words = solve_one_jumble(letters)
         # Store each word result in a tuple to make it look like a phrase
         return [(word,) for word in words]
-    #
-   
 
     # Otherwise, the circles for the final jumble are a phrase (multiple words)
     # so it requires a more complex approach than unscrambling a single word
@@ -118,26 +114,44 @@ def solve_final_jumble(letters, final_circles):
     # Returned data should be a list of tuples (phrases) of strings (words)
     # Example: [('FIRST', 'SOLUTION'), ('SECOND', 'SOLUTION')]
     valid_phrases = []
-    
+
     # TODO: Unscramble the given letters into all valid phrases
     # ========> YOUR CODE HERE <========
 
-    unscrambled = list()
-    all_words = get_file_lines()
-   
+    d = enchant("en_US")
 
-    # Get all permutations
-    combinations = list()
-    for word in all_words:
-       combinations.append(solve_one_jumble(letters)(word.lower()))
 
-    # Check options
-    for options in combinations:
-        for word in options:
-            if word in all_words:
-                unscrambled.append(word)
+    # All ideal words for each set will go here
+    word_one_res = []
+    word_two_res = []
+
+
+
+    word_one = [''.join(p) for p in permutations(letters, group_sizes[0] )]
+    word_two = [''.join(p) for p in permutations(letters, group_sizes[1] )]
+
+    for word in word_one:
+      if d.check(word):
+        word_one_res.append(word)
+        break
+
+    for word in word_two:
+        if d.check(word):
+            word_two_res.append(word)
+            break
     
-    return set(unscrambled)
+    #Create Phrase using both arrays
+
+    for word in word_one_res:
+        for word_two in word_two_res:
+            final_answer = f"{word}{word_two}"
+            valid_phrases.append(final_answer)
+
+    return list(valid_phrases)
+
+
+
+
 
 
 def solve_word_jumble(letters, circles, final):
@@ -154,6 +168,7 @@ def solve_word_jumble(letters, circles, final):
     # Create a string to collect circled letters for the final jumbled phrase
     final_letters = ''
 
+
     # Solve each jumbled word one at a time by unscrambling the given letters
     for index in range(len(letters)):
         # Get the scrambled letters and circled blanks for one jumbled word
@@ -162,7 +177,7 @@ def solve_word_jumble(letters, circles, final):
 
         # Unscramble the letters to solve a single jumbled word
         words = solve_one_jumble(scrambled_letters)
-
+        
         # Display this jumble's scrambled letters and any results
         print(f'Jumble {index+1}: {scrambled_letters} => ', end='')
         # Check if no solution was found, then skip to the next jumble
@@ -187,7 +202,7 @@ def solve_word_jumble(letters, circles, final):
     final_results = solve_final_jumble(final_letters, final)
 
     # Display the final jumble's scrambled letters and any results
-    print(f'Final Jumble: {final_letters} => ', end='')
+    print(f'Final Jumble: {final_results} => ', end='')
     # Check if no solution was found, then return early
     if len(final_results) == 0:
         print('(no solution)')
